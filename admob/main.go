@@ -1,0 +1,148 @@
+package admob
+
+import (
+	"crypto/ecdsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/asn1"
+	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"errors"
+	"log"
+	"math/big"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
+)
+
+const admobKeyServerEndpoint = "https://gstatic.com/admob/reward/verifier-keys.json"
+const admobKeyServerEndpointTest = "https://gstatic.com/admob/reward/verifier-keys-test.json"
+
+/*
+* https://github.com/google/tink/blob/master/apps/rewardedads/src/main/java/com/google/crypto/tink/apps/rewardedads/RewardedAdsVerifier.java
+* https://thanethomson.com/2018/11/30/validating-ecdsa-signatures-golang/
+ */
+
+type ECDSASignature struct {
+	R, S *big.Int
+}
+
+type (
+	VerifierKeyJson struct {
+		Keys []VerifierKey `json:"keys"`
+	}
+
+	VerifierKey struct {
+		KeyId  int    `json:"keyId"`
+		Pem    string `json:"pem"`
+		Base64 string `json:"base64"`
+	}
+
+	KeyMap map[int]*ecdsa.PublicKey
+)
+
+func getJson(url string, target interface{}) error {
+	var c = &http.Client{Timeout: 10 * time.Second}
+	r, err := c.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(target)
+}
+
+func hash(b []byte) []byte {
+	h := sha256.New()
+	h.Write(b)
+	// compute the SHA256 hash
+	return h.Sum(nil)
+}
+
+func loadPublicKey(publicKey string) (*ecdsa.PublicKey, error) {
+	block, _ := pem.Decode([]byte(publicKey))
+	if block == nil {
+		return nil, errors.New("Failed to decode PEM public key")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, errors.New("Failed to parse ECDSA public key")
+	}
+
+	switch pub := pub.(type) {
+	case *ecdsa.PublicKey:
+		return pub, nil
+	}
+
+	return nil, errors.New("Unsupported public key type")
+}
+
+func keysToMap(keys []VerifierKey) (KeyMap, error) {
+	keyMap := KeyMap{}
+	for _, k := range keys {
+		publicKey, err := loadPublicKey(k.Pem)
+		if err != nil {
+			return nil, err
+		}
+		keyMap[k.KeyId] = publicKey
+	}
+	return keyMap, nil
+}
+
+// admob rewarded video ads server-side-verification callback url
+func Verify(cbUrl *url.URL) (err error) {
+	verifierKeyJson := &VerifierKeyJson{}
+	if err = getJson(admobKeyServerEndpoint, verifierKeyJson); err != nil {
+		return
+	}
+
+	rawQuery := cbUrl.RawQuery
+	sigIdx := strings.Index(rawQuery, "&signature=")
+	if sigIdx == -1 {
+		return errors.New("Can't find signature")
+	}
+
+	keyIdStr := cbUrl.Query().Get("key_id")
+	keyId, err := strconv.Atoi(keyIdStr)
+	if err != nil {
+		return err
+	}
+
+	messageData := rawQuery[:sigIdx]
+	defer log.Printf("admob_ssv - messageData: %s", messageData)
+
+	signatureDerStr := cbUrl.Query().Get("signature")
+	signatureDer, err := base64.RawURLEncoding.DecodeString(signatureDerStr)
+	if err != nil {
+		return err
+	}
+
+	signature := &ECDSASignature{}
+	_, err = asn1.Unmarshal(signatureDer, signature)
+	if err != nil {
+		return err
+	}
+
+	km, err := keysToMap(verifierKeyJson.Keys)
+	if err != nil {
+		return err
+	}
+
+	publicKey, ok := km[keyId]
+	if !ok {
+		return errors.New("Can't find key_id from keys")
+	}
+
+	msgHash := hash([]byte(messageData))
+
+	verified := ecdsa.Verify(publicKey, msgHash, signature.R, signature.S)
+	if !verified {
+		return errors.New("Signature not valid")
+	}
+
+	return
+}
