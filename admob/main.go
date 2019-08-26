@@ -41,7 +41,7 @@ type (
 		Base64 string `json:"base64"`
 	}
 
-	KeyMap map[int]*ecdsa.PublicKey
+	KeyMap map[int]string
 )
 
 func getJson(url string, target interface{}) error {
@@ -62,7 +62,7 @@ func hash(b []byte) []byte {
 	return h.Sum(nil)
 }
 
-func loadPublicKey(publicKey string) (*ecdsa.PublicKey, error) {
+func parsePublicKey(publicKey string) (*ecdsa.PublicKey, error) {
 	block, _ := pem.Decode([]byte(publicKey))
 	if block == nil {
 		return nil, errors.New("Failed to decode PEM public key")
@@ -84,20 +84,30 @@ func loadPublicKey(publicKey string) (*ecdsa.PublicKey, error) {
 func keysToMap(keys []VerifierKey) (KeyMap, error) {
 	keyMap := KeyMap{}
 	for _, k := range keys {
-		publicKey, err := loadPublicKey(k.Pem)
-		if err != nil {
-			return nil, err
-		}
-		keyMap[k.KeyId] = publicKey
+		keyMap[k.KeyId] = k.Pem
 	}
 	return keyMap, nil
 }
 
 // admob rewarded video ads server-side-verification callback url
 func Verify(cbUrl *url.URL) (err error) {
+	// -- get verifier keys json
 	verifierKeyJson := &VerifierKeyJson{}
 	if err = getJson(admobKeyServerEndpoint, verifierKeyJson); err != nil {
 		return
+	}
+
+	// -- prepare pre-params
+	keyIdStr := cbUrl.Query().Get("key_id")
+	keyId, err := strconv.Atoi(keyIdStr)
+	if err != nil {
+		return err
+	}
+
+	signatureDerStr := cbUrl.Query().Get("signature")
+	signatureDer, err := base64.RawURLEncoding.DecodeString(signatureDerStr)
+	if err != nil {
+		return err
 	}
 
 	rawQuery := cbUrl.RawQuery
@@ -106,43 +116,36 @@ func Verify(cbUrl *url.URL) (err error) {
 		return errors.New("Can't find signature")
 	}
 
-	keyIdStr := cbUrl.Query().Get("key_id")
-	keyId, err := strconv.Atoi(keyIdStr)
-	if err != nil {
-		return err
-	}
-
 	messageData := rawQuery[:sigIdx]
 	defer log.Printf("admob_ssv - messageData: %s", messageData)
 
-	signatureDerStr := cbUrl.Query().Get("signature")
-	signatureDer, err := base64.RawURLEncoding.DecodeString(signatureDerStr)
-	if err != nil {
-		return err
-	}
+	// -- prepare specific params
+	msgHash := hash([]byte(messageData))
 
 	signature := &ECDSASignature{}
 	_, err = asn1.Unmarshal(signatureDer, signature)
 	if err != nil {
-		return err
+		return
 	}
 
+	// public key
 	km, err := keysToMap(verifierKeyJson.Keys)
 	if err != nil {
 		return err
 	}
-
-	publicKey, ok := km[keyId]
+	pem, ok := km[keyId]
 	if !ok {
 		return errors.New("Can't find key_id from keys")
 	}
+	publicKey, err := parsePublicKey(pem)
+	if err != nil {
+		return err
+	}
 
-	msgHash := hash([]byte(messageData))
-
+	// -- verify
 	verified := ecdsa.Verify(publicKey, msgHash, signature.R, signature.S)
 	if !verified {
 		return errors.New("Signature not valid")
 	}
-
 	return
 }
