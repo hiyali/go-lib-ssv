@@ -13,6 +13,7 @@ The aim of this repository is simplify the chaos of the SSV
 import "github.com/hiyali/go-lib-ssv/admob"
 
 func main() {
+  admob.LogRawQuery = true // enable log query raw, default is: false
   if err := admob.Verify(adRewardUrl); err != nil {
     // Verification failed
   }
