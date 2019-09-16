@@ -44,6 +44,10 @@ type (
 	KeyMap map[int]string
 )
 
+var (
+	LogRawQuery bool = false
+)
+
 func getJson(url string, target interface{}) error {
 	var c = &http.Client{Timeout: 10 * time.Second}
 	r, err := c.Get(url)
@@ -111,15 +115,17 @@ func Verify(cbUrl *url.URL) (err error) {
 	}
 
 	rawQuery := cbUrl.RawQuery
+	if LogRawQuery {
+		defer log.Printf("admob_ssv - rawQuery: %s", rawQuery)
+	}
+
 	sigIdx := strings.Index(rawQuery, "&signature=")
 	if sigIdx == -1 {
 		return errors.New("Can't find signature")
 	}
 
-	messageData := rawQuery[:sigIdx]
-	defer log.Printf("admob_ssv - messageData: %s", messageData)
-
 	// -- prepare specific params
+	messageData := rawQuery[:sigIdx]
 	msgHash := hash([]byte(messageData))
 
 	signature := &ECDSASignature{}
