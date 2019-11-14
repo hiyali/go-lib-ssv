@@ -32,8 +32,8 @@ https://www.yourdomain.com/path?ad_network=5450213213286189855&ad_unit=12345678&
 
 | lib.Method | Description |
 | --- | --- |
-| admob.Verify(url *url.Url) error | |
-| mopub.Verify(url *url.Url, secret, verifierKey string) error | verifierKey usually is `hash`, you'll find secret key in `Rewarded video` tab in `https://app.mopub.com/account` page |
+| `admob.Verify(url *url.Url) error` | |
+| `mopub.Verify(url *url.Url, secret, verifierKey string) error` | verifierKey usually is `hash`, you'll find secret key in `Rewarded video` tab in `https://app.mopub.com/account` page |
 
 ## Examples
 
