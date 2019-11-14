@@ -45,7 +45,7 @@ type (
 )
 
 var (
-	LogRawQuery bool = false
+	LogEnabled bool = false
 )
 
 func getJson(url string, target interface{}) error {
@@ -115,8 +115,8 @@ func Verify(cbUrl *url.URL) (err error) {
 	}
 
 	rawQuery := cbUrl.RawQuery
-	if LogRawQuery {
-		defer log.Printf("admob_ssv - rawQuery: %s", rawQuery)
+	if LogEnabled {
+		log.Printf("admob.Verify - url.RawQuery: %s", rawQuery)
 	}
 
 	sigIdx := strings.Index(rawQuery, "&signature=")
