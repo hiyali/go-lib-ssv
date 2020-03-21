@@ -114,7 +114,10 @@ func Verify(cbUrl *url.URL) (err error) {
 		return err
 	}
 
-	rawQuery := cbUrl.RawQuery
+	rawQuery, err := url.QueryUnescape(cbUrl.RawQuery)
+	if err != nil {
+		return err
+	}
 	if LogEnabled {
 		log.Printf("admob.Verify - url.RawQuery: %s", rawQuery)
 	}
