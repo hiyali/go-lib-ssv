@@ -59,3 +59,7 @@ func ApiGetHandler(c echo.Context) (err error) {
 
 ## Contribution
 > Feel free
+
+## LICENSE
+
+[MIT](https://raw.githubusercontent.com/hiyali/go-lib-ssv/master/LICENSE)
