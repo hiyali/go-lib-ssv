@@ -1,10 +1,10 @@
-# go-lib-ssv
+# go-lib-ssv [![](https://godoc.org/github.com/hiyali/go-lib-ssv?status.svg)](http://godoc.org/github.com/hiyali/go-lib-ssv)
 The aim of this repository is simplify the chaos of the SSV
 
 ## Verifiers added for
 
-* [Admob](https://admob.google.com/home/) ([doc](https://developers.google.com/admob/android/rewarded-video-ssv))
-* [MoPub](https://app.mopub.com/) ([doc](https://developers.mopub.com/publishers/android/rewarded-video/#4-configure-the-callback-server))
+* AdMob [godoc](http://godoc.org/github.com/hiyali/go-lib-ssv/admob) ( [official doc](https://developers.google.com/admob/android/rewarded-video-ssv) | [home page](https://admob.google.com/home/) )
+* MoPub [godoc](http://godoc.org/github.com/hiyali/go-lib-ssv/mopub) ( [official doc](https://developers.mopub.com/publishers/android/rewarded-video/#4-configure-the-callback-server) | [home page](https://app.mopub.com/) )
 
 ## Quick look
 
@@ -35,24 +35,14 @@ https://www.yourdomain.com/path?ad_network=5450213213286189855&ad_unit=12345678&
 | `admob.Verify(url *url.Url) error` | |
 | `mopub.Verify(url *url.Url, secret, verifierKey string) error` | verifierKey usually is `hash`, you'll find secret key in `Rewarded video` tab in `https://app.mopub.com/account` page |
 
-## Examples
-
-* echo ([echo.labstack.com](https://echo.labstack.com))
-
-```golang
-import "github.com/hiyali/go-lib-ssv/admob"
-
-func ApiGetHandler(c echo.Context) (err error) {
-  ...
-  if err := admob.Verify(c.Request().URL); err != nil {
-    log.Errorf("Verification failed - err: %v", err)
-    return err
-  }
-
-  // do something after verified
-  ...
-}
+## Test
+```
+go test ./...
 ```
 
 ## Contribution
 > Feel free
+
+## LICENSE
+
+[MIT](https://raw.githubusercontent.com/hiyali/go-lib-ssv/master/LICENSE)

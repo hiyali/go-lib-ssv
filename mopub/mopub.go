@@ -18,7 +18,9 @@ var (
 	LogEnabled bool = false
 )
 
-// mopub rewarded video ads server-side-verification callback url
+// `cbUrl` is mopub rewarded video ads server-side-verification callback url
+// `verifierKey` usually is `hash`
+// you'll find `secret` key in `Rewarded video` tab in `https://app.mopub.com/account` page
 func Verify(cbUrl *url.URL, secret, verifierKey string) (err error) {
 	// -- 1. Parse the callback URL and retrieve the query parameters
 	query := cbUrl.Query()

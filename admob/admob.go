@@ -18,30 +18,32 @@ import (
 	"time"
 )
 
-const admobKeyServerEndpoint = "https://gstatic.com/admob/reward/verifier-keys.json"
-const admobKeyServerEndpointTest = "https://gstatic.com/admob/reward/verifier-keys-test.json"
+const (
+	keyServerEndpoint     = "https://gstatic.com/admob/reward/verifier-keys.json"
+	keyServerEndpointTest = "https://gstatic.com/admob/reward/verifier-keys-test.json"
+)
 
 /*
 * https://github.com/google/tink/blob/master/apps/rewardedads/src/main/java/com/google/crypto/tink/apps/rewardedads/RewardedAdsVerifier.java
 * https://thanethomson.com/2018/11/30/validating-ecdsa-signatures-golang/
  */
 
-type ECDSASignature struct {
-	R, S *big.Int
-}
-
 type (
-	VerifierKeyJson struct {
-		Keys []VerifierKey `json:"keys"`
+	ecdsaSignature struct {
+		R, S *big.Int
 	}
 
-	VerifierKey struct {
+	verifierKeyJson struct {
+		Keys []verifierKey `json:"keys"`
+	}
+
+	verifierKey struct {
 		KeyId  int    `json:"keyId"`
 		Pem    string `json:"pem"`
 		Base64 string `json:"base64"`
 	}
 
-	KeyMap map[int]string
+	keyMap map[int]string
 )
 
 var (
@@ -85,19 +87,19 @@ func parsePublicKey(publicKey string) (*ecdsa.PublicKey, error) {
 	return nil, errors.New("Unsupported public key type")
 }
 
-func keysToMap(keys []VerifierKey) (KeyMap, error) {
-	keyMap := KeyMap{}
+func keysToMap(keys []verifierKey) (keyMap, error) {
+	kMap := keyMap{}
 	for _, k := range keys {
-		keyMap[k.KeyId] = k.Pem
+		kMap[k.KeyId] = k.Pem
 	}
-	return keyMap, nil
+	return kMap, nil
 }
 
-// admob rewarded video ads server-side-verification callback url
+// cbUrl is admob rewarded video ads server-side-verification callback url
 func Verify(cbUrl *url.URL) (err error) {
 	// -- get verifier keys json
-	verifierKeyJson := &VerifierKeyJson{}
-	if err = getJson(admobKeyServerEndpoint, verifierKeyJson); err != nil {
+	verifierKeyJson := &verifierKeyJson{}
+	if err = getJson(keyServerEndpoint, verifierKeyJson); err != nil {
 		return
 	}
 
@@ -131,7 +133,7 @@ func Verify(cbUrl *url.URL) (err error) {
 	messageData := rawQuery[:sigIdx]
 	msgHash := hash([]byte(messageData))
 
-	signature := &ECDSASignature{}
+	signature := &ecdsaSignature{}
 	_, err = asn1.Unmarshal(signatureDer, signature)
 	if err != nil {
 		return
