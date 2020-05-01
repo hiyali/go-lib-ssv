@@ -18,8 +18,10 @@ import (
 	"time"
 )
 
-const admobKeyServerEndpoint = "https://gstatic.com/admob/reward/verifier-keys.json"
-const admobKeyServerEndpointTest = "https://gstatic.com/admob/reward/verifier-keys-test.json"
+const (
+	keyServerEndpoint     = "https://gstatic.com/admob/reward/verifier-keys.json"
+	keyServerEndpointTest = "https://gstatic.com/admob/reward/verifier-keys-test.json"
+)
 
 /*
 * https://github.com/google/tink/blob/master/apps/rewardedads/src/main/java/com/google/crypto/tink/apps/rewardedads/RewardedAdsVerifier.java
@@ -97,7 +99,7 @@ func keysToMap(keys []VerifierKey) (KeyMap, error) {
 func Verify(cbUrl *url.URL) (err error) {
 	// -- get verifier keys json
 	verifierKeyJson := &VerifierKeyJson{}
-	if err = getJson(admobKeyServerEndpoint, verifierKeyJson); err != nil {
+	if err = getJson(keyServerEndpoint, verifierKeyJson); err != nil {
 		return
 	}
 

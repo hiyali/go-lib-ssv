@@ -35,9 +35,12 @@ https://www.yourdomain.com/path?ad_network=5450213213286189855&ad_unit=12345678&
 | `admob.Verify(url *url.Url) error` | |
 | `mopub.Verify(url *url.Url, secret, verifierKey string) error` | verifierKey usually is `hash`, you'll find secret key in `Rewarded video` tab in `https://app.mopub.com/account` page |
 
-## Examples
+## Test
+```
+go test ./...
+```
 
-* echo ([echo.labstack.com](https://echo.labstack.com))
+## Example with [echo](https://echo.labstack.com) framework
 
 ```golang
 import "github.com/hiyali/go-lib-ssv/admob"
