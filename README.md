@@ -1,7 +1,7 @@
-[![](https://img.shields.io/github/license/hiyali/go-lib-ssv)](https://opensource.org/licenses/MIT)
 [![](https://godoc.org/github.com/hiyali/go-lib-ssv?status.svg)](http://godoc.org/github.com/hiyali/go-lib-ssv)
-[![](https://travis-ci.org/hiyali/go-lib-ssv.svg?branch=master)](https://travis-ci.org/hiyali/go-lib-ssv)
 [![](https://goreportcard.com/badge/github.com/hiyali/go-lib-ssv)](https://goreportcard.com/report/github.com/hiyali/go-lib-ssv)
+[![](https://travis-ci.org/hiyali/go-lib-ssv.svg?branch=master)](https://travis-ci.org/hiyali/go-lib-ssv)
+[![](https://img.shields.io/github/license/hiyali/go-lib-ssv)](https://opensource.org/licenses/MIT)
 # go-lib-ssv
 The aim of this repository is simplify the chaos of the SSV
 
