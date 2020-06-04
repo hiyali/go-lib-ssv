@@ -1,8 +1,5 @@
-[![](https://godoc.org/github.com/hiyali/go-lib-ssv?status.svg)](http://godoc.org/github.com/hiyali/go-lib-ssv)
-[![](https://goreportcard.com/badge/github.com/hiyali/go-lib-ssv)](https://goreportcard.com/report/github.com/hiyali/go-lib-ssv)
-[![](https://travis-ci.org/hiyali/go-lib-ssv.svg?branch=master)](https://travis-ci.org/hiyali/go-lib-ssv)
-[![](https://img.shields.io/github/license/hiyali/go-lib-ssv)](https://opensource.org/licenses/MIT)
-# go-lib-ssv
+# go-lib-ssv [![](https://godoc.org/github.com/hiyali/go-lib-ssv?status.svg)](http://godoc.org/github.com/hiyali/go-lib-ssv) [![](https://goreportcard.com/badge/github.com/hiyali/go-lib-ssv)](https://goreportcard.com/report/github.com/hiyali/go-lib-ssv) [![](https://travis-ci.org/hiyali/go-lib-ssv.svg?branch=master)](https://travis-ci.org/hiyali/go-lib-ssv) [![](https://img.shields.io/github/license/hiyali/go-lib-ssv)](https://opensource.org/licenses/MIT)
+
 The aim of this repository is simplify the chaos of the SSV
 
 ## Verifiers added for
@@ -15,10 +12,11 @@ The aim of this repository is simplify the chaos of the SSV
 ```golang
 import "github.com/hiyali/go-lib-ssv/admob"
 
-func main() {
-  admob.LogEnabled = true // enable log query raw, default is: false
-  if err := admob.Verify(adRewardUrl); err != nil {
-    // Verification failed
+func adMobVideoRewardedAdHandler(w http.ResponseWriter, r *http.Request) {
+  // Magic
+  if err := admob.Verify(r.URL); err != nil {
+    log.Errorf("Verification failed - err: %v", err)
+    return
   }
 
   // Verified
@@ -32,12 +30,17 @@ https://www.yourdomain.com/path?ad_network=5450213213286189855&ad_unit=12345678&
 
 ## Lib / Method
 
-> All libs have `LogEnabled` property
-
 | lib.Method | Description |
 | --- | --- |
 | `admob.Verify(url *url.Url) error` | |
 | `mopub.Verify(url *url.Url, secret, verifierKey string) error` | verifierKey usually is `hash`, you'll find secret key in `Rewarded video` tab in `https://app.mopub.com/account` page |
+
+> All libs have `LogEnabled` property
+
+```go
+// enable log query raw, default is: false
+admob.LogEnabled = true
+```
 
 ## Test
 ```
